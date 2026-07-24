@@ -1,44 +1,216 @@
-### Talha Aksoy
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Talha Aksoy — field-native geospatial tools</title>
+<meta name="description" content="Browser-native tools for satellite overpass planning, GIS/CAD conversion, and field visibility survey. Associate Professor of Landscape Architecture, Kırklareli University.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Spectral:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sheet:#e7eae3;        /* map-sheet paper, cool sage-grey */
+  --ink:#16201d;          /* near-black green */
+  --field:#2f6d54;        /* field green */
+  --brass:#a9781f;        /* instrument brass, kept away from terracotta */
+  --line:#bcc3b7;         /* graticule hairline */
+  --dim:#5d665b;
+  --panel:#f3f5f0;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--sheet);color:var(--ink);
+  font-family:"Spectral",Georgia,serif;font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+/* ---- map-sheet neatline + graticule ---- */
+.sheet{
+  max-width:1120px;margin:0 auto;padding:clamp(20px,4vw,54px);
+  position:relative;
+}
+.sheet::before{
+  content:"";position:absolute;inset:clamp(12px,2.6vw,30px);
+  border:1.5px solid var(--ink);pointer-events:none;
+  background-image:
+    linear-gradient(var(--line) 1px,transparent 1px),
+    linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:64px 64px;
+  -webkit-mask-image:linear-gradient(#000,#000);
+  opacity:1;
+  z-index:0;
+}
+.sheet::after{ /* fade the grid so it reads as faint graticule */
+  content:"";position:absolute;inset:clamp(12px,2.6vw,30px);pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 12%,rgba(231,234,227,0) 40%,var(--sheet) 100%);
+  z-index:0;
+}
+.inner{position:relative;z-index:1;padding:clamp(10px,2vw,26px)}
 
-Associate Professor (Doçent), Department of Landscape Architecture, Kırklareli University.
-I work at the intersection of remote sensing, GIS, spatial statistics and computational
-landscape analysis — Google Earth Engine, UAV photogrammetry, and physics-derived measures
-of spatial order applied to ecological and landscape problems.
+/* corner coordinate ticks — the sheet's "signature" */
+.tick{position:absolute;font-family:"IBM Plex Mono",monospace;font-size:11px;
+  letter-spacing:.06em;color:var(--dim);z-index:2}
+.tick.tl{top:calc(clamp(12px,2.6vw,30px) + 6px);left:calc(clamp(12px,2.6vw,30px) + 8px)}
+.tick.tr{top:calc(clamp(12px,2.6vw,30px) + 6px);right:calc(clamp(12px,2.6vw,30px) + 8px);text-align:right}
+.tick.bl{bottom:calc(clamp(12px,2.6vw,30px) + 6px);left:calc(clamp(12px,2.6vw,30px) + 8px)}
+.tick.br{bottom:calc(clamp(12px,2.6vw,30px) + 6px);right:calc(clamp(12px,2.6vw,30px) + 8px);text-align:right}
 
-The tools below are small, single-purpose and dependency-light. Each runs entirely in the
-browser: no server, no upload, nothing leaves the device. They exist because the field work
-needed them.
+/* ---- header ---- */
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--field);margin:0 0 18px}
+h1{font-family:"Space Grotesk",sans-serif;font-weight:700;
+  font-size:clamp(34px,6vw,60px);line-height:1.02;letter-spacing:-.02em;margin:0 0 20px}
+h1 .sub{display:block;font-weight:400;font-size:clamp(15px,2.4vw,20px);
+  color:var(--dim);letter-spacing:0;margin-top:16px;max-width:52ch;font-family:"Spectral",serif}
+.lede{max-width:60ch;font-size:clamp(16px,2.2vw,19px);margin:0 0 8px}
+.lede em{font-style:italic;color:var(--field)}
 
----
+.rule{height:1.5px;background:var(--ink);border:0;margin:38px 0 34px}
 
-#### 🛰️ [Overpass Planner](https://tlhksy.github.io/Overpass/) · [repo](https://github.com/tlhksy/Overpass)
+/* ---- projects ---- */
+.count{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--dim);margin:0 0 22px}
+.proj{
+  display:grid;grid-template-columns:96px 1fr;gap:0 26px;
+  padding:28px 0;border-top:1px solid var(--line);position:relative;
+}
+.proj:first-of-type{border-top:1.5px solid var(--ink)}
+.idx{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--brass);
+  padding-top:6px;letter-spacing:.05em}
+.proj h2{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:clamp(22px,3.4vw,30px);
+  letter-spacing:-.01em;margin:0 0 4px;line-height:1.1}
+.proj h2 a{color:var(--ink);text-decoration:none;background-image:linear-gradient(var(--brass),var(--brass));
+  background-size:0% 1.5px;background-position:0 100%;background-repeat:no-repeat;transition:background-size .3s}
+.proj h2 a:hover,.proj h2 a:focus{background-size:100% 1.5px}
+.proj .kind{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--field);margin:0 0 12px}
+.proj p{margin:0 0 16px;max-width:64ch}
 
-When will a satellite pass over my field site, and where will the sun be at that moment?
-Click a point on the map; the page fetches current orbital elements, propagates them with
-SGP4, and returns the overpass times for Sentinel-2, Landsat, Sentinel-1 and MODIS — each
-with the sub-satellite ground track, a swath-edge warning, and the solar elevation, zenith
-and **true solar time** at closest approach. Built to align UAV flights with satellite
-acquisitions, so drone and image see the same illumination geometry.
+/* instrument readout strip — one per tool, drawn from what the tool measures */
+.readout{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--dim);
+  display:flex;flex-wrap:wrap;gap:6px 20px;padding:10px 14px;background:var(--panel);
+  border:1px solid var(--line);margin:0 0 16px}
+.readout b{color:var(--ink);font-weight:500}
+.readout .k{color:var(--brass)}
 
-#### 🗺️ [Pafta — GIS ⇄ CAD converter](https://tlhksy.github.io/Convert/) · [repo](https://github.com/tlhksy/Convert)
+.links{font-family:"IBM Plex Mono",monospace;font-size:12.5px;letter-spacing:.02em;display:flex;gap:18px;flex-wrap:wrap}
+.links a{color:var(--field);text-decoration:none;border-bottom:1px solid transparent;padding-bottom:1px}
+.links a:hover,.links a:focus{border-bottom-color:var(--field)}
+.links a .arw{color:var(--dim)}
 
-A vector converter between GIS and CAD formats: reads Shapefile, GeoJSON, KML, GPX, CSV;
-writes DXF, Shapefile, GeoJSON, KML, CSV; transforms coordinate reference systems. The point
-is not the conversion — it is the **loss report**. Every run says exactly what it gave up:
-field names truncated to ten characters, layers transliterated to ASCII, polygon holes split
-into separate polylines. It refuses to write a DXF in geographic coordinates, because a
-unitless drawing measured in degrees is silently broken. Transforms agree with PROJ to better
-than a millimetre; outputs are checked in CI against pyshp and ezdxf, not its own readers.
-Turkish TUREF and ED50 zones alongside the standard UTM grid.
+/* ---- footer ---- */
+footer{margin-top:40px;padding-top:24px;border-top:1.5px solid var(--ink);
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--dim);
+  display:flex;flex-wrap:wrap;gap:8px 26px;align-items:baseline}
+footer a{color:var(--field);text-decoration:none;border-bottom:1px solid transparent}
+footer a:hover,footer a:focus{border-bottom-color:var(--field)}
+footer .spacer{flex:1}
+footer .credo{color:var(--dim)}
 
-#### 🚶 [Field Visibility Recorder](https://tlhksy.github.io/LandscapeWalker-/) · [repo](https://github.com/tlhksy/LandscapeWalker-)
+/* reveal on load */
+@media (prefers-reduced-motion:no-preference){
+  .reveal{opacity:0;transform:translateY(10px);animation:rise .7s cubic-bezier(.2,.7,.2,1) forwards}
+  .reveal:nth-child(1){animation-delay:.05s}
+  .reveal:nth-child(2){animation-delay:.12s}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .proj{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.2,.7,.2,1) forwards}
+  .proj:nth-of-type(1){animation-delay:.18s}
+  .proj:nth-of-type(2){animation-delay:.28s}
+  .proj:nth-of-type(3){animation-delay:.38s}
+}
 
-A phone-first field tool for walking a transect: at each stop, photograph and classify the
-view, and the app records position, camera azimuth, route bearing, GPS elevation and segment
-slope. A built-in clinometer measures ground slope and object height from the phone's
-orientation sensors. Everything is stored on the device and picks up where you left off;
-export as a printable site report, GeoJSON for GIS/GEE, or a CSV attribute table.
+a:focus-visible{outline:2px solid var(--brass);outline-offset:3px;border-radius:1px}
 
----
+@media(max-width:640px){
+  body{font-size:16px}
+  .proj{grid-template-columns:1fr;gap:0}
+  .idx{padding-top:0;margin-bottom:6px}
+  .tick{font-size:9.5px}
+  .sheet::before{background-size:44px 44px}
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <span class="tick tl">41°44′06″N</span>
+  <span class="tick tr">27°13′30″E</span>
+  <span class="tick bl">Kırklareli · TR</span>
+  <span class="tick br">EPSG:4326</span>
 
-<sub>Turkish and English · falsification-first · methods before conclusions</sub>
+  <div class="inner">
+    <p class="eyebrow reveal">Field-native geospatial tools</p>
+    <h1 class="reveal">Talha Aksoy
+      <span class="sub">Associate Professor of Landscape Architecture, Kırklareli University. Remote sensing, GIS, spatial statistics, and UAV photogrammetry — with a habit of turning field problems into small, honest software.</span>
+    </h1>
+
+    <p class="lede">Three browser-native tools, each built because a field campaign needed it. They run entirely on the device: <em>no server, no upload, nothing leaves your machine</em>. Each is single-purpose, dependency-light, and open source.</p>
+
+    <hr class="rule">
+
+    <p class="count">03 tools · MIT licensed · runs offline</p>
+
+    <article class="proj">
+      <div class="idx">↗ 01</div>
+      <div>
+        <p class="kind">Orbit · Solar geometry</p>
+        <h2><a href="https://tlhksy.github.io/Overpass/">Overpass Planner</a></h2>
+        <div class="readout">
+          <span><span class="k">SAT</span> <b>Sentinel-2</b></span>
+          <span><span class="k">PASS</span> <b>12:09 local</b></span>
+          <span><span class="k">SOLAR</span> <b>10:52 TST</b></span>
+          <span><span class="k">ZENITH</span> <b>26.9°</b></span>
+        </div>
+        <p>When will a satellite pass over my field site, and where will the sun be at that moment? Click a point on the map; the page fetches current orbital elements, propagates them with SGP4, and returns overpass times for Sentinel-2, Landsat, Sentinel-1 and MODIS — each with the ground track, a swath-edge warning, and the solar elevation, zenith and true solar time at closest approach. Built to align UAV flights with satellite acquisitions.</p>
+        <p class="links">
+          <a href="https://tlhksy.github.io/Overpass/">Open tool <span class="arw">→</span></a>
+          <a href="https://github.com/tlhksy/Overpass">Source</a>
+        </p>
+      </div>
+    </article>
+
+    <article class="proj">
+      <div class="idx">↗ 02</div>
+      <div>
+        <p class="kind">Vector data · GIS ⇄ CAD</p>
+        <h2><a href="https://tlhksy.github.io/Convert/">Pafta — vector converter</a></h2>
+        <div class="readout">
+          <span><span class="k">IN</span> <b>SHP · GeoJSON · KML · GPX</b></span>
+          <span><span class="k">OUT</span> <b>DXF · SHP · KML · CSV</b></span>
+          <span><span class="k">CRS</span> <b>≤ 1 mm vs PROJ</b></span>
+        </div>
+        <p>A converter between GIS and CAD formats — but the point is not the conversion, it is the loss report. Every run says exactly what it gave up: field names truncated to ten characters, layers transliterated to ASCII, polygon holes split into separate polylines. It refuses to write a DXF in geographic coordinates, because a unitless drawing measured in degrees is silently broken. Transforms agree with PROJ to better than a millimetre; outputs are checked in CI against pyshp and ezdxf — third-party readers, not its own. <em>Pafta</em> means map sheet.</p>
+        <p class="links">
+          <a href="https://tlhksy.github.io/Convert/">Open tool <span class="arw">→</span></a>
+          <a href="https://github.com/tlhksy/Convert">Source</a>
+        </p>
+      </div>
+    </article>
+
+    <article class="proj">
+      <div class="idx">↗ 03</div>
+      <div>
+        <p class="kind">Field survey · Transect</p>
+        <h2><a href="https://tlhksy.github.io/LandscapeWalker-/">Field Visibility Recorder</a></h2>
+        <div class="readout">
+          <span><span class="k">STOP</span> <b>photo + class</b></span>
+          <span><span class="k">SENSOR</span> <b>azimuth · bearing · slope</b></span>
+          <span><span class="k">OUT</span> <b>PDF · GeoJSON · CSV</b></span>
+        </div>
+        <p>A phone-first tool for walking a transect. At each stop you photograph and classify the view, and the app records position, camera azimuth, route bearing, GPS elevation and segment slope. A built-in clinometer measures ground slope and object height from the phone's orientation sensors. Everything is stored on the device and resumes where you left off; export as a printable site report, GeoJSON for GIS and Earth Engine, or a CSV attribute table.</p>
+        <p class="links">
+          <a href="https://tlhksy.github.io/LandscapeWalker-/">Open tool <span class="arw">→</span></a>
+          <a href="https://github.com/tlhksy/LandscapeWalker-">Source</a>
+        </p>
+      </div>
+    </article>
+
+    <footer>
+      <span><a href="https://github.com/tlhksy">github.com/tlhksy</a></span>
+      <span class="spacer"></span>
+      <span class="credo">falsification-first · methods before conclusions</span>
+    </footer>
+  </div>
+</div>
+</body>
+</html>
